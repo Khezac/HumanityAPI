@@ -5,6 +5,7 @@ import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -30,15 +31,13 @@ public class StorageController {
         }
     }
 
-    @GetMapping("/download/{fileName}")
-    public ResponseEntity<String> downloadFile(@PathVariable String fileName) {
-        String data = storageService.downloadFile(fileName);
+    @GetMapping("/download/{id}")
+    public ResponseEntity<List<String>> downloadFile(@PathVariable Long id) {
+        List<String> data = storageService.downloadFile(id);
 
         return ResponseEntity
                 .ok()
-                .contentLength(data.length())
-                .header("Content-type", "application/octet-stream")
-                .header("Content-disposition", "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(data);
     }
 

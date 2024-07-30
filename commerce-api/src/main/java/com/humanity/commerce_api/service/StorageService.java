@@ -2,8 +2,7 @@ package com.humanity.commerce_api.service;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,19 +48,27 @@ public class StorageService {
         return "Arquivos enviados com sucesso!";
     }
 
-    public String downloadFile(String fileName){
+    public List<String> downloadFile(Long id){
+        List<String> listUrl = new ArrayList<>();
+
+        ListObjectsV2Request req = new ListObjectsV2Request().withBucketName(bucketName).withPrefix(id.toString());
+        ListObjectsV2Result result = s3Cliente.listObjectsV2(req);
+
         Date expiration = new Date();
         long expTimeMillis = expiration.getTime();
         expTimeMillis += 1000 * 60 * 60; // 1 hora
         expiration.setTime(expTimeMillis);
+        for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+            String fileName = objectSummary.getKey();
+            GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                    new GeneratePresignedUrlRequest(bucketName, fileName)
+                            .withMethod(HttpMethod.GET)
+                            .withExpiration(expiration);
 
-        GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                new GeneratePresignedUrlRequest(bucketName, fileName)
-                        .withMethod(HttpMethod.GET)
-                        .withExpiration(expiration);
-
-        URL url = s3Cliente.generatePresignedUrl(generatePresignedUrlRequest);
-        return url.toString();
+            URL url = s3Cliente.generatePresignedUrl(generatePresignedUrlRequest);
+            listUrl.add(url.toString());
+        }
+        return listUrl;
     }
 
     public String deleteFile(String fileName){
