@@ -12,10 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class StorageService {
@@ -71,9 +68,38 @@ public class StorageService {
         return listUrl;
     }
 
-    public String deleteFile(String fileName){
-        s3Cliente.deleteObject(bucketName, fileName);
-        return "Arquivo deletado: " + fileName;
+    public String downloadByFileName(Long id, String fileName){
+
+        String key = id + "/" + fileName;
+
+        Date expiration = new Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60; // 1 hora
+        expiration.setTime(expTimeMillis);
+
+        if(!s3Cliente.doesObjectExist(bucketName, key)) {
+            throw new NoSuchElementException("O objeto ou o caminho inserido não existem!");
+        } else {
+            GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                    new GeneratePresignedUrlRequest(bucketName, key)
+                            .withMethod(HttpMethod.GET)
+                            .withExpiration(expiration);
+
+            URL url = s3Cliente.generatePresignedUrl(generatePresignedUrlRequest);
+            return url.toString();
+        }
+    }
+
+    public String deleteFile(Long path, String fileName){
+        String url = downloadByFileName(path, fileName);
+
+        if(url.isBlank()) {
+            throw new NoSuchElementException("Não foi possível deletar objeto: " + path + "/" + fileName);
+        } else {
+            String deleteFile = path + "/" + fileName;
+            s3Cliente.deleteObject(bucketName, deleteFile);
+            return "Arquivo deletado: " + deleteFile;
+        }
     }
 
     private File convertToFile(MultipartFile file) throws IOException{

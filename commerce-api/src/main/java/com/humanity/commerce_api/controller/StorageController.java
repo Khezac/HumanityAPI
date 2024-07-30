@@ -30,10 +30,18 @@ public class StorageController {
             throw new RuntimeException(e);
         }
     }
+    @GetMapping("/download/{path}")
+    public ResponseEntity<List<String>> downloadFile(@PathVariable Long path) {
+        List<String> data = storageService.downloadFile(path);
 
-    @GetMapping("/download/{id}")
-    public ResponseEntity<List<String>> downloadFile(@PathVariable Long id) {
-        List<String> data = storageService.downloadFile(id);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(data);
+    }
+    @GetMapping("/download/{path}/{fileName}")
+    public ResponseEntity<String> downloadFile(@PathVariable Long path, @PathVariable String fileName) {
+        String data = storageService.downloadByFileName(path, fileName);
 
         return ResponseEntity
                 .ok()
@@ -41,8 +49,9 @@ public class StorageController {
                 .body(data);
     }
 
-    @DeleteMapping("/delete/{fileName}")
-    public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
-        return new ResponseEntity<>(storageService.deleteFile(fileName), HttpStatus.OK);
+
+    @DeleteMapping("/delete/{path}/{fileName}")
+    public ResponseEntity<String> deleteFile(@PathVariable Long path,@PathVariable String fileName) {
+        return new ResponseEntity<>(storageService.deleteFile(path,fileName), HttpStatus.OK);
     }
 }
