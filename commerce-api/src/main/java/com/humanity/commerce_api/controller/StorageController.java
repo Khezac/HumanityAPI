@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/file")
@@ -20,9 +22,9 @@ public class StorageController {
     private StorageService storageService;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam(value = "file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(@RequestParam(value = "files") MultipartFile[] files,@RequestParam("id") Long id) {
         try {
-            return new ResponseEntity<>(storageService.uploadFile(file), HttpStatus.CREATED);
+            return new ResponseEntity<>(storageService.uploadFile(files, id), HttpStatus.CREATED);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

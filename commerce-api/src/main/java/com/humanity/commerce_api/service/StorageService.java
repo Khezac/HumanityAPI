@@ -4,9 +4,6 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.amazonaws.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,7 +13,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class StorageService {
@@ -27,15 +27,26 @@ public class StorageService {
     @Autowired
     private AmazonS3 s3Cliente;
 
-    public String uploadFile(MultipartFile file) throws IOException {
-        File fileObj = convertToFile(file);
+    public String uploadFile(MultipartFile[] files, Long id) throws IOException {
+        List<MultipartFile> allFiles = Arrays.stream(files).toList();
 
-        String fileName = System.currentTimeMillis()+"_"+file.getOriginalFilename();
-        s3Cliente.putObject(new PutObjectRequest(bucketName, fileName, fileObj));
+        if(id == null) {
+            throw new IOException("Não é possível enviar arquivos com ID nulo ou zerado!");
+        } else {
+            for (MultipartFile rawFile : allFiles) {
+                File file = convertToFile(rawFile);
+                try {
+                    String fileName = String.format("%s/%s", id, rawFile.getOriginalFilename());
 
-        fileObj.delete();
+                    s3Cliente.putObject(new PutObjectRequest(bucketName, fileName, file));
+                    file.delete();
+                } catch (Exception e) {
+                    throw new RuntimeException("Erro ao fazer upload do arquivo: " + file + "\nErro: " + e);
+                }
+            }
+        }
 
-        return "Arquivo enviado: " + fileName;
+        return "Arquivos enviados com sucesso!";
     }
 
     public String downloadFile(String fileName){
@@ -61,11 +72,12 @@ public class StorageService {
     private File convertToFile(MultipartFile file) throws IOException{
         File convertedFile = new File(file.getOriginalFilename());
 
-        try (FileOutputStream fos = new FileOutputStream(convertedFile)){
+        try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
             fos.write(file.getBytes());
         } catch (IOException e) {
             throw e;
         }
+
         return convertedFile;
     }
 }
