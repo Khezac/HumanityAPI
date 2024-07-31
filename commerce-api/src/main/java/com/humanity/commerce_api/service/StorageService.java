@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,7 +46,7 @@ public class StorageService {
         return "Arquivos enviados com sucesso!";
     }
 
-    public List<String> downloadFile(Long id){
+    public List<String> downloadFiles(Long id){
         List<String> listUrl = new ArrayList<>();
 
         ListObjectsV2Request req = new ListObjectsV2Request().withBucketName(bucketName).withPrefix(id.toString());
@@ -90,6 +91,32 @@ public class StorageService {
         }
     }
 
+    public String downloadFirstFile(Long id){
+        String path = id.toString();
+
+        Date expiration = new Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60; // 1 hora
+        expiration.setTime(expTimeMillis);
+
+        ListObjectsV2Request req = new ListObjectsV2Request().withBucketName(bucketName).withPrefix(path).withMaxKeys(1);
+        ListObjectsV2Result result = s3Cliente.listObjectsV2(req);
+
+        if(result.getObjectSummaries().isEmpty()) {;
+            throw new NoSuchElementException("O caminho inserido não existe!");
+        } else {
+            S3ObjectSummary firstFile = result.getObjectSummaries().get(0);
+
+            GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                    new GeneratePresignedUrlRequest(bucketName, firstFile.getKey())
+                            .withMethod(HttpMethod.GET)
+                            .withExpiration(expiration);
+
+            URL url = s3Cliente.generatePresignedUrl(generatePresignedUrlRequest);
+            return url.toString();
+        }
+    }
+
     public String deleteFile(Long path, String fileName){
         String url = downloadByFileName(path, fileName);
 
@@ -99,6 +126,26 @@ public class StorageService {
             String deleteFile = path + "/" + fileName;
             s3Cliente.deleteObject(bucketName, deleteFile);
             return "Arquivo deletado: " + deleteFile;
+        }
+    }
+
+    public String deletePath(Long path){
+        List<String> files = downloadFiles(path); // Procura o diretório passado pelo argumento da função
+
+        if(files.isEmpty()) {
+            throw new NoSuchElementException("Não foi possível encontrar diretorio: " + path);
+        } else {
+            ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request() // Requisição para pegar todos os objetos no diretório
+                    .withBucketName(bucketName)
+                    .withPrefix(path.toString());
+
+            ListObjectsV2Result listObjects = s3Cliente.listObjectsV2(listObjectsV2Request);
+
+            for (S3ObjectSummary object : listObjects.getObjectSummaries()){
+                s3Cliente.deleteObject(bucketName, object.getKey());
+            };
+
+            return "Diretorio deletado: " + path;
         }
     }
 

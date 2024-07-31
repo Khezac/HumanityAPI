@@ -32,26 +32,30 @@ public class StorageController {
     }
     @GetMapping("/download/{path}")
     public ResponseEntity<List<String>> downloadFile(@PathVariable Long path) {
-        List<String> data = storageService.downloadFile(path);
+        List<String> data = storageService.downloadFiles(path);
 
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(data);
     }
-    @GetMapping("/download/{path}/{fileName}")
-    public ResponseEntity<String> downloadFile(@PathVariable Long path, @PathVariable String fileName) {
-        String data = storageService.downloadByFileName(path, fileName);
+    @GetMapping("/download/firstFile/{path}")
+    public ResponseEntity<String> downloadFirstFile(@PathVariable Long path) {
+        String data = storageService.downloadFirstFile(path);
 
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(data);
     }
-
 
     @DeleteMapping("/delete/{path}/{fileName}")
     public ResponseEntity<String> deleteFile(@PathVariable Long path,@PathVariable String fileName) {
         return new ResponseEntity<>(storageService.deleteFile(path,fileName), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{path}")
+    public ResponseEntity<String> deleteFile(@PathVariable Long path) {
+        return new ResponseEntity<>(storageService.deletePath(path), HttpStatus.OK);
     }
 }

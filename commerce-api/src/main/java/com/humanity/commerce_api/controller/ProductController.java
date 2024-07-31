@@ -1,11 +1,13 @@
 package com.humanity.commerce_api.controller;
 
+import com.humanity.commerce_api.DTOs.ProductDTO;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -18,17 +20,17 @@ public class ProductController {
     ProductService service;
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) throws Exception {
-        return new ResponseEntity<>(service.postProduct(product), HttpStatus.CREATED);
+    public ResponseEntity<Product> createProduct(@RequestParam("productInfo") String product, @RequestParam("productImages")MultipartFile[] images) throws Exception {
+        return new ResponseEntity<>(service.postProduct(product, images), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts () {
+    public ResponseEntity<List<ProductDTO>> getAllProducts () {
         return new ResponseEntity<>(service.getAllProducts(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById (@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> getProductById (@PathVariable Long id) {
         return new ResponseEntity<>(service.getProductById(id), HttpStatus.OK);
     }
 
@@ -38,7 +40,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Product> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
         return new ResponseEntity<>(service.deleteProduct(id), HttpStatus.OK);
     }
 }

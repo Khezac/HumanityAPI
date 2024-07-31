@@ -86,4 +86,17 @@ public class Product {
     public String getCategory() {
         return category;
     }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "product_id=" + product_id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", size='" + size + '\'' +
+                ", gender=" + gender +
+                ", unit_price=" + unit_price +
+                ", category='" + category + '\'' +
+                '}';
+    }
 }
