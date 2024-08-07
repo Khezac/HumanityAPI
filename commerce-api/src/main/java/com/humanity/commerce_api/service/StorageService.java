@@ -3,6 +3,7 @@ package com.humanity.commerce_api.service;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
+import com.humanity.commerce_api.DTOs.ImagesByIdDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -46,8 +47,8 @@ public class StorageService {
         return "Arquivos enviados com sucesso!";
     }
 
-    public List<String> downloadFiles(Long id){
-        List<String> listUrl = new ArrayList<>();
+    public List<ImagesByIdDTO> downloadFiles(Long id){
+        List<ImagesByIdDTO> listImages = new ArrayList<>();
 
         ListObjectsV2Request req = new ListObjectsV2Request().withBucketName(bucketName).withPrefix(id.toString());
         ListObjectsV2Result result = s3Cliente.listObjectsV2(req);
@@ -57,16 +58,20 @@ public class StorageService {
         expTimeMillis += 1000 * 60 * 60; // 1 hora
         expiration.setTime(expTimeMillis);
         for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+            ImagesByIdDTO image = new ImagesByIdDTO();
             String fileName = objectSummary.getKey();
+            image.setFileName(fileName);
+
             GeneratePresignedUrlRequest generatePresignedUrlRequest =
                     new GeneratePresignedUrlRequest(bucketName, fileName)
                             .withMethod(HttpMethod.GET)
                             .withExpiration(expiration);
 
             URL url = s3Cliente.generatePresignedUrl(generatePresignedUrlRequest);
-            listUrl.add(url.toString());
+            image.setURL(url.toString());
+            listImages.add(image);
         }
-        return listUrl;
+        return listImages;
     }
 
     public String downloadByFileName(Long id, String fileName){
@@ -130,7 +135,7 @@ public class StorageService {
     }
 
     public String deletePath(Long path){
-        List<String> files = downloadFiles(path); // Procura o diretório passado pelo argumento da função
+        List<ImagesByIdDTO> files = downloadFiles(path); // Procura o diretório passado pelo argumento da função
 
         if(files.isEmpty()) {
             throw new NoSuchElementException("Não foi possível encontrar diretorio: " + path);

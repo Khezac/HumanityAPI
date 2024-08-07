@@ -1,6 +1,7 @@
 package com.humanity.commerce_api.controller;
 
 import com.humanity.commerce_api.DTOs.ProductDTO;
+import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> getProductById (@PathVariable Long id) {
+    public ResponseEntity<ProductWithEveryImageDTO> getProductById (@PathVariable Long id) {
         return new ResponseEntity<>(service.getProductById(id), HttpStatus.OK);
     }
 
@@ -40,7 +41,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<ProductWithEveryImageDTO> deleteProduct(@PathVariable Long id) {
         return new ResponseEntity<>(service.deleteProduct(id), HttpStatus.OK);
     }
 }

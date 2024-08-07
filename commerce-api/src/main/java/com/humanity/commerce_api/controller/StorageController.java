@@ -1,5 +1,8 @@
 package com.humanity.commerce_api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.humanity.commerce_api.DTOs.ImagesByIdDTO;
+import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.service.StorageService;
 import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +25,21 @@ public class StorageController {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    ObjectMapper objMap;
+
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam(value = "files") MultipartFile[] files,@RequestParam("id") Long id) {
+    public ResponseEntity<String> uploadFile(@RequestParam(value = "files") MultipartFile[] files,@RequestParam("id") String productId) {
         try {
-            return new ResponseEntity<>(storageService.uploadFile(files, id), HttpStatus.CREATED);
+            Product product = objMap.readValue(productId, Product.class);
+            return new ResponseEntity<>(storageService.uploadFile(files, product.getProduct_id()), HttpStatus.CREATED);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
     @GetMapping("/download/{path}")
-    public ResponseEntity<List<String>> downloadFile(@PathVariable Long path) {
-        List<String> data = storageService.downloadFiles(path);
+    public ResponseEntity<List<ImagesByIdDTO>> downloadFile(@PathVariable Long path) {
+        List<ImagesByIdDTO> data = storageService.downloadFiles(path);
 
         return ResponseEntity
                 .ok()
@@ -55,7 +62,7 @@ public class StorageController {
     }
 
     @DeleteMapping("/delete/{path}")
-    public ResponseEntity<String> deleteFile(@PathVariable Long path) {
+    public ResponseEntity<String> deletePath(@PathVariable Long path) {
         return new ResponseEntity<>(storageService.deletePath(path), HttpStatus.OK);
     }
 }
