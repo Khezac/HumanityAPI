@@ -118,5 +118,16 @@ public class ProductService {
         return productDTO;
     }
 
+    public Product deleteOnlyInfo(Long id) throws Exception {
+        Product productToDelete = productRepo.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
+        try {
+            productRepo.delete(productToDelete);
+            return productToDelete;
+        } catch(Exception e) {
+            throw new Exception("Não foi possível deletar informações do produto com id: " + id);
+        }
+    }
+
 
 }

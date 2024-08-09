@@ -44,4 +44,9 @@ public class ProductController {
     public ResponseEntity<ProductWithEveryImageDTO> deleteProduct(@PathVariable Long id) {
         return new ResponseEntity<>(service.deleteProduct(id), HttpStatus.OK);
     }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Product> deleteInfoFromProduct(@PathVariable Long id) throws Exception {
+        return new ResponseEntity<>(service.deleteOnlyInfo(id), HttpStatus.OK);
+    }
 }

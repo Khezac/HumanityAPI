@@ -61,6 +61,11 @@ public class StorageController {
         return new ResponseEntity<>(storageService.deleteFile(path,fileName), HttpStatus.OK);
     }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteFileList(@RequestBody ImagesByIdDTO[] list) throws IOException {
+        return new ResponseEntity<>(storageService.deleteImageList(list), HttpStatus.OK);
+    }
+
     @DeleteMapping("/delete/{path}")
     public ResponseEntity<String> deletePath(@PathVariable Long path) {
         return new ResponseEntity<>(storageService.deletePath(path), HttpStatus.OK);

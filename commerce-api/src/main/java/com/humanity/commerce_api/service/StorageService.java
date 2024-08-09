@@ -108,7 +108,7 @@ public class StorageService {
         ListObjectsV2Result result = s3Cliente.listObjectsV2(req);
 
         if(result.getObjectSummaries().isEmpty()) {;
-            throw new NoSuchElementException("O caminho inserido não existe!");
+            return null;
         } else {
             S3ObjectSummary firstFile = result.getObjectSummaries().get(0);
 
@@ -151,6 +151,17 @@ public class StorageService {
             };
 
             return "Diretorio deletado: " + path;
+        }
+    }
+
+    public String deleteImageList(ImagesByIdDTO[] list) throws IOException {
+        try {
+            for (ImagesByIdDTO image : list) {
+                s3Cliente.deleteObject(bucketName, image.getFileName());
+            }
+            return "Lista de imagens deletada com sucesso: " + Arrays.toString(list);
+        } catch(Exception e) {
+            throw new IOException("Não foi possível deletar a lista de imagens!" + e);
         }
     }
 
