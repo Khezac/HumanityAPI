@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -31,10 +30,9 @@ public class ProductService {
     @Autowired
     ObjectMapper objMap;
 
-    public Product postProduct (String product, MultipartFile[] images) throws Exception {
-        Product newProduct = new Product();
+    public Product postProduct (String product, MultipartFile[] images) {
         try {
-            newProduct = objMap.readValue(product, Product.class);
+            Product newProduct = objMap.readValue(product, Product.class);
             Product savedProduct = productRepo.save(newProduct);
             storageService.uploadFile(images, savedProduct.getProduct_id());
             return savedProduct;
@@ -44,13 +42,11 @@ public class ProductService {
     }
 
     public List<ProductDTO> getAllProducts () {
-        List<Product> prodList = productRepo.findAll();;
+        try {
+            List<Product> prodList = productRepo.findAll();
 
-        List<ProductDTO> prodDtoList = new ArrayList<>();
+            List<ProductDTO> prodDtoList = new ArrayList<>();
 
-        if(prodList.isEmpty()) {
-            throw new NoSuchElementException("Não há produtos registrados");
-        } else {
             for (Product product : prodList) {
                 List<String> imagesUrls = new ArrayList<>();
 
@@ -62,17 +58,20 @@ public class ProductService {
                 productDTO.setImageURL(imagesUrls);
                 prodDtoList.add(productDTO);
             }
+
+            return prodDtoList;
+        } catch (Exception e){
+            throw new RuntimeException("Ocorreu um erro ao tentar acessar a lista dos produtos: " + e);
         }
-        return prodDtoList;
     }
 
     public ProductWithEveryImageDTO getProductById (Long id) {
         Product productEntity = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
+                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
 
         ProductWithEveryImageDTO productDTO = modelMapper.map(productEntity, ProductWithEveryImageDTO.class);
 
-        List<ImagesByIdDTO> imagesUrls = new ArrayList<>();
+        List<ImagesByIdDTO> imagesUrls;
         try {
             imagesUrls = storageService.downloadFiles(productEntity.getProduct_id());
         } catch (Exception e) {
@@ -87,8 +86,8 @@ public class ProductService {
         try {
             Long id = product.getProduct_id();
 
-            Product productToUpdate = productRepo.findById(id)
-                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
+            productRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
 
             return productRepo.save(product);
         } catch(Exception e) {
@@ -98,11 +97,11 @@ public class ProductService {
 
     public ProductWithEveryImageDTO deleteProduct (Long id) {
         Product productToDelete = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
+                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
 
         ProductWithEveryImageDTO productDTO = modelMapper.map(productToDelete, ProductWithEveryImageDTO.class);
 
-        List<ImagesByIdDTO> imagesUrls = new ArrayList<>();
+        List<ImagesByIdDTO> imagesUrls;
 
         try {
             imagesUrls = storageService.downloadFiles(productToDelete.getProduct_id());
@@ -120,7 +119,7 @@ public class ProductService {
 
     public Product deleteOnlyInfo(Long id) throws Exception {
         Product productToDelete = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
+                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
         try {
             productRepo.delete(productToDelete);
             return productToDelete;
