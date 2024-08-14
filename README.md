@@ -10,6 +10,9 @@ Esta é uma API feita para ser consumida pelo e-commerce Humanity.
 ## Tecnologias utilizadas:
 - Java
 - SpringBoot
+- AWS S3
+- PostgreSQL
+  
 * Bibliotecas:
   - AWS SDK Core
   - AWS SDK S3
