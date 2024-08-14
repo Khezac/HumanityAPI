@@ -60,9 +60,11 @@ public class ProductService {
 
                 List<ImageDTO> imagesDto = new ArrayList<>();
 
-                imagesDto.add(ImageToDto(product.getImages().getFirst()));
+                if(!product.getImages().isEmpty()){
+                    imagesDto.add(ImageToDto(product.getImages().getFirst()));
 
-                productDTO.setImages(imagesDto);
+                    productDTO.setImages(imagesDto);
+                }
                 prodDtoList.add(productDTO);
             }
 
@@ -122,17 +124,6 @@ public class ProductService {
         storageService.deletePath(id);
 
         return productDTO;
-    }
-
-    public Product deleteOnlyInfo(Long id) throws Exception {
-        Product productToDelete = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
-        try {
-            productRepo.delete(productToDelete);
-            return productToDelete;
-        } catch(Exception e) {
-            throw new Exception("Não foi possível deletar informações do produto com id: " + id);
-        }
     }
 
     public ProductDTO ProductToDto (Product product) {

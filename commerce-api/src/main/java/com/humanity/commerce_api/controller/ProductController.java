@@ -1,8 +1,10 @@
 package com.humanity.commerce_api.controller;
 
+import com.humanity.commerce_api.DTOs.ImageDTO;
 import com.humanity.commerce_api.DTOs.ProductDTO;
 import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
 import com.humanity.commerce_api.entity.Product;
+import com.humanity.commerce_api.service.ImageService;
 import com.humanity.commerce_api.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,8 +47,4 @@ public class ProductController {
         return new ResponseEntity<>(service.deleteProduct(id), HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Product> deleteInfoFromProduct(@PathVariable Long id) throws Exception {
-        return new ResponseEntity<>(service.deleteOnlyInfo(id), HttpStatus.OK);
-    }
 }
