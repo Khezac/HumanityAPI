@@ -31,7 +31,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductWithEveryImageDTO> getProductById (@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> getProductById (@PathVariable Long id) {
         return new ResponseEntity<>(service.getProductById(id), HttpStatus.OK);
     }
 

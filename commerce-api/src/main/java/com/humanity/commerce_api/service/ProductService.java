@@ -58,10 +58,9 @@ public class ProductService {
             for (Product product : prodList) {
                 ProductDTO productDTO = ProductToDto(product);
 
-                List<ImageDTO> imagesDto = product.getImages()
-                        .stream()
-                        .map(this::ImageToDto)
-                        .collect(Collectors.toList());
+                List<ImageDTO> imagesDto = new ArrayList<>();
+
+                imagesDto.add(ImageToDto(product.getImages().getFirst()));
 
                 productDTO.setImages(imagesDto);
                 prodDtoList.add(productDTO);
@@ -73,21 +72,21 @@ public class ProductService {
         }
     }
 
-    public ProductWithEveryImageDTO getProductById (Long id) {
-        Product productEntity = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
-
-        ProductWithEveryImageDTO productDTO = modelMapper.map(productEntity, ProductWithEveryImageDTO.class);
-
-        List<ImagesByIdDTO> imagesUrls;
+    @Transactional
+    public ProductDTO getProductById (Long id) {
         try {
-            imagesUrls = storageService.downloadFiles(productEntity.getProduct_id());
-        } catch (Exception e) {
-            throw new RuntimeException("Não foi possível captar imagens desse produto!");
-        }
-        productDTO.setImageURL(imagesUrls);
+            Product productEntity = productRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
 
-        return productDTO;
+            ProductDTO productDTO = ProductToDto(productEntity);
+
+            List<ImageDTO> images = productEntity.getImages().stream().map(this::ImageToDto).collect(Collectors.toList());
+
+            productDTO.setImages(images);
+            return productDTO;
+        } catch (Exception e) {
+            throw new RuntimeException("Não foi possível captar imagens desse produto!\nErro: " + e);
+        }
     }
 
     public Product putProduct (Product product) {
@@ -162,4 +161,5 @@ public class ProductService {
 //        return modelMapper.map(image, ImageDTO.class);
         return imageDto;
     }
+
 }
