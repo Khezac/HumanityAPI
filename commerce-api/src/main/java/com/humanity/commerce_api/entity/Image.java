@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 public class Image {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long image_id;
 
     private String type;
@@ -24,10 +25,6 @@ public class Image {
 
     public Long getImage_id() {
         return image_id;
-    }
-
-    public void setImage_id(Long image_id) {
-        this.image_id = image_id;
     }
 
     public String getType() {
@@ -52,10 +49,6 @@ public class Image {
 
     public void setBytes(byte[] bytes) {
         this.bytes = bytes;
-    }
-
-    public Product getProduct() {
-        return product;
     }
 
     public void setProduct(Product product) {

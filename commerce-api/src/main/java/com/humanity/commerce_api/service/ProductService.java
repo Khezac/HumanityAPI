@@ -8,6 +8,7 @@ import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
 import com.humanity.commerce_api.entity.Image;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -41,13 +43,12 @@ public class ProductService {
             Product savedProduct = productRepo.save(newProduct);
             imageService.saveImage(images, savedProduct);
 
-
             return savedProduct;
         } catch(Exception e) {
             throw new RuntimeException("Não foi possível cadastrar produto: " + product);
         }
     }
-
+    @Transactional
     public List<ProductDTO> getAllProducts () {
         try {
             List<Product> prodList = productRepo.findAll();
@@ -55,24 +56,14 @@ public class ProductService {
             List<ProductDTO> prodDtoList = new ArrayList<>();
 
             for (Product product : prodList) {
-                List<ImageDTO> images = new ArrayList<>();
+                ProductDTO productDTO = ProductToDto(product);
 
-                ProductDTO productDTO = new ProductDTO();
+                List<ImageDTO> imagesDto = product.getImages()
+                        .stream()
+                        .map(this::ImageToDto)
+                        .collect(Collectors.toList());
 
-                // TRANSFORMAR ESSE BLOCO EM UM MÈTODO E APENAS CHAMAR O METODO
-                productDTO.setProduct_id(product.getProduct_id());
-                productDTO.setName(product.getName());
-                productDTO.setDescription(product.getDescription());
-                productDTO.setSize(product.getSize());
-                productDTO.setGender(product.getGender());
-                productDTO.setUnit_price(product.getUnit_price());
-                productDTO.setCategory(product.getCategory());
-
-                Image image = imageService.findImageById(product.getProduct_id());
-                ImageDTO imageDto = modelMapper.map(image, ImageDTO.class);
-                images.add(imageDto);
-
-                productDTO.setImages(images);
+                productDTO.setImages(imagesDto);
                 prodDtoList.add(productDTO);
             }
 
@@ -145,4 +136,30 @@ public class ProductService {
         }
     }
 
+    public ProductDTO ProductToDto (Product product) {
+        ProductDTO productDTO = new ProductDTO();
+
+        productDTO.setProduct_id(product.getProduct_id());
+        productDTO.setName(product.getName());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setSize(product.getSize());
+        productDTO.setGender(product.getGender());
+        productDTO.setUnit_price(product.getUnit_price());
+        productDTO.setCategory(product.getCategory());
+
+        return productDTO;
+    }
+
+    @Transactional
+    public ImageDTO ImageToDto (Image image) {
+        ImageDTO imageDto = new ImageDTO();
+
+        imageDto.setImage_id(image.getImage_id());
+        imageDto.setBytes(image.getBytes());
+        imageDto.setType(image.getType());
+        imageDto.setFileName(image.getFileName());
+
+//        return modelMapper.map(image, ImageDTO.class);
+        return imageDto;
+    }
 }

@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 public class ImageService {
@@ -21,7 +20,6 @@ public class ImageService {
         try {
             for (MultipartFile image : images) {
                 Image newImage = new Image();
-                newImage.setImage_id(product.getProduct_id());
                 newImage.setBytes(image.getBytes());
                 newImage.setProduct(product);
                 newImage.setFileName(image.getOriginalFilename());
