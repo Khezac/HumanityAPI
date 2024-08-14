@@ -1,9 +1,11 @@
 package com.humanity.commerce_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.humanity.commerce_api.DTOs.ImageDTO;
 import com.humanity.commerce_api.DTOs.ImagesByIdDTO;
 import com.humanity.commerce_api.DTOs.ProductDTO;
 import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
+import com.humanity.commerce_api.entity.Image;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
@@ -22,6 +24,9 @@ public class ProductService {
     ProductRepository productRepo;
 
     @Autowired
+    ImageService imageService;
+
+    @Autowired
     StorageService storageService;
 
     @Autowired
@@ -34,7 +39,9 @@ public class ProductService {
         try {
             Product newProduct = objMap.readValue(product, Product.class);
             Product savedProduct = productRepo.save(newProduct);
-            storageService.uploadFile(images, savedProduct.getProduct_id());
+            imageService.saveImage(images, savedProduct);
+
+
             return savedProduct;
         } catch(Exception e) {
             throw new RuntimeException("Não foi possível cadastrar produto: " + product);
@@ -48,14 +55,24 @@ public class ProductService {
             List<ProductDTO> prodDtoList = new ArrayList<>();
 
             for (Product product : prodList) {
-                List<String> imagesUrls = new ArrayList<>();
+                List<ImageDTO> images = new ArrayList<>();
 
-                ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+                ProductDTO productDTO = new ProductDTO();
 
-                String imageUrl = storageService.downloadFirstFile(product.getProduct_id());
-                imagesUrls.add(imageUrl);
+                // TRANSFORMAR ESSE BLOCO EM UM MÈTODO E APENAS CHAMAR O METODO
+                productDTO.setProduct_id(product.getProduct_id());
+                productDTO.setName(product.getName());
+                productDTO.setDescription(product.getDescription());
+                productDTO.setSize(product.getSize());
+                productDTO.setGender(product.getGender());
+                productDTO.setUnit_price(product.getUnit_price());
+                productDTO.setCategory(product.getCategory());
 
-                productDTO.setImageURL(imagesUrls);
+                Image image = imageService.findImageById(product.getProduct_id());
+                ImageDTO imageDto = modelMapper.map(image, ImageDTO.class);
+                images.add(imageDto);
+
+                productDTO.setImages(images);
                 prodDtoList.add(productDTO);
             }
 
@@ -127,6 +144,5 @@ public class ProductService {
             throw new Exception("Não foi possível deletar informações do produto com id: " + id);
         }
     }
-
 
 }

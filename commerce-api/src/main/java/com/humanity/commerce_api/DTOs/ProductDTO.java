@@ -1,5 +1,8 @@
 package com.humanity.commerce_api.DTOs;
 
+import com.humanity.commerce_api.entity.Image;
+import com.humanity.commerce_api.enums.Gender;
+
 import java.util.List;
 
 public class ProductDTO {
@@ -8,10 +11,10 @@ public class ProductDTO {
     private String name;
     private String description;
     private String size;
-    private String gender;
-    private String unit_price;
+    private Gender gender;
+    private Double unit_price;
     private String category;
-    private List<String> imageURL;
+    private List<ImageDTO> images;
 
     public Long getProduct_id() {
         return product_id;
@@ -29,11 +32,11 @@ public class ProductDTO {
         return size;
     }
 
-    public String getGender() {
+    public Gender getGender() {
         return gender;
     }
 
-    public String getUnit_price() {
+    public Double getUnit_price() {
         return unit_price;
     }
 
@@ -41,8 +44,8 @@ public class ProductDTO {
         return category;
     }
 
-    public List<String> getImageURL() {
-        return imageURL;
+    public List<ImageDTO> getImages() {
+        return images;
     }
 
     public void setProduct_id(Long product_id) {
@@ -61,11 +64,11 @@ public class ProductDTO {
         this.size = size;
     }
 
-    public void setGender(String gender) {
+    public void setGender(Gender gender) {
         this.gender = gender;
     }
 
-    public void setUnit_price(String unit_price) {
+    public void setUnit_price(Double unit_price) {
         this.unit_price = unit_price;
     }
 
@@ -73,7 +76,7 @@ public class ProductDTO {
         this.category = category;
     }
 
-    public void setImageURL(List<String> imageURL) {
-        this.imageURL = imageURL;
+    public void setImages(List<ImageDTO> images) {
+        this.images = images;
     }
 }

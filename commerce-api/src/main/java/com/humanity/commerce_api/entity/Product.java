@@ -3,6 +3,8 @@ package com.humanity.commerce_api.entity;
 import com.humanity.commerce_api.enums.Gender;
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "product")
 public class Product {
@@ -17,6 +19,9 @@ public class Product {
     private Gender gender;
     private Double unit_price;
     private String category;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Image> images;
 
     public Product() {
     }
@@ -85,6 +90,14 @@ public class Product {
 
     public String getCategory() {
         return category;
+    }
+
+    public List<Image> getImages() {
+        return images;
+    }
+
+    public void setImages(List<Image> images) {
+        this.images = images;
     }
 
     @Override
