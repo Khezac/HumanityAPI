@@ -104,26 +104,18 @@ public class ProductService {
         }
     }
 
-    public ProductWithEveryImageDTO deleteProduct (Long id) {
-        Product productToDelete = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
-
-        ProductWithEveryImageDTO productDTO = modelMapper.map(productToDelete, ProductWithEveryImageDTO.class);
-
-        List<ImagesByIdDTO> imagesUrls;
-
+    @Transactional
+    public Product deleteProduct (Long id) {
         try {
-            imagesUrls = storageService.downloadFiles(productToDelete.getProduct_id());
-        } catch (Exception e) {
-            throw new RuntimeException("Não foi possível captar imagens desse produto!");
+            Product productToDelete = productRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
+
+            productRepo.delete(productToDelete);
+
+            return productToDelete;
+        } catch (Exception e){
+            throw new NoSuchElementException("Não foi possível deletar produto com id: " + id);
         }
-
-        productDTO.setImageURL(imagesUrls);
-
-        productRepo.delete(productToDelete);
-        storageService.deletePath(id);
-
-        return productDTO;
     }
 
     public ProductDTO ProductToDto (Product product) {

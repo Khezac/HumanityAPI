@@ -43,7 +43,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ProductWithEveryImageDTO> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Product> deleteProduct(@PathVariable Long id) {
         return new ResponseEntity<>(service.deleteProduct(id), HttpStatus.OK);
     }
 
