@@ -1,5 +1,7 @@
 package com.humanity.commerce_api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.humanity.commerce_api.entity.Image;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.repository.ImageRepository;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -22,8 +25,19 @@ public class ImageService {
     @Autowired
     ModelMapper modelMapper;
 
-    public void saveImage (MultipartFile[] images, Product product) {
+    @Autowired
+    ObjectMapper objMap;
+
+    public List<Image> postImages (MultipartFile[] images, String product) throws IOException {
+            Product newProduct = objMap.readValue(product, Product.class);
+
+            return saveImage(images, newProduct);
+    }
+
+    public List<Image> saveImage (MultipartFile[] images, Product product) throws IOException {
         try {
+            List<Image> savedImages = new ArrayList<>();
+
             for (MultipartFile image : images) {
                 Image newImage = new Image();
                 newImage.setBytes(image.getBytes());
@@ -32,9 +46,12 @@ public class ImageService {
                 newImage.setType(image.getContentType());
 
                 imageRepo.save(newImage);
+                savedImages.add(newImage);
             }
+
+            return savedImages;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IOException("Não foi possível persistir as imagens!\nErro: " + e);
         }
     }
 

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -37,7 +38,7 @@ public class ProductService {
     @Autowired
     ObjectMapper objMap;
 
-    public Product postProduct (String product, MultipartFile[] images) {
+    public Product postProduct (String product, MultipartFile[] images) throws IOException {
         try {
             Product newProduct = objMap.readValue(product, Product.class);
             Product savedProduct = productRepo.save(newProduct);
@@ -45,7 +46,7 @@ public class ProductService {
 
             return savedProduct;
         } catch(Exception e) {
-            throw new RuntimeException("Não foi possível cadastrar produto: " + product);
+            throw new IOException("Não foi possível cadastrar produto: " + product + "\nErro: " + e);
         }
     }
     @Transactional
@@ -70,7 +71,7 @@ public class ProductService {
 
             return prodDtoList;
         } catch (Exception e){
-            throw new RuntimeException("Ocorreu um erro ao tentar acessar a lista dos produtos: " + e);
+            throw new RuntimeException("Ocorreu um erro ao tentar acessar a lista dos produtos: \n" + e);
         }
     }
 
@@ -100,7 +101,7 @@ public class ProductService {
 
             return productRepo.save(product);
         } catch(Exception e) {
-            throw new RuntimeException("Não foi possível editar produto: " + product);
+            throw new RuntimeException("Não foi possível editar produto de id: " + product.getProduct_id() + "\nErro: " + e);
         }
     }
 
@@ -114,7 +115,7 @@ public class ProductService {
 
             return productToDelete;
         } catch (Exception e){
-            throw new NoSuchElementException("Não foi possível deletar produto com id: " + id);
+            throw new NoSuchElementException("Não foi possível deletar produto com id: " + id + "\nErro: " + e);
         }
     }
 

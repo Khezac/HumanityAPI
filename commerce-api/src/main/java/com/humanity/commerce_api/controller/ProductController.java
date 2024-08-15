@@ -1,10 +1,7 @@
 package com.humanity.commerce_api.controller;
 
-import com.humanity.commerce_api.DTOs.ImageDTO;
 import com.humanity.commerce_api.DTOs.ProductDTO;
-import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
 import com.humanity.commerce_api.entity.Product;
-import com.humanity.commerce_api.service.ImageService;
 import com.humanity.commerce_api.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/products")
