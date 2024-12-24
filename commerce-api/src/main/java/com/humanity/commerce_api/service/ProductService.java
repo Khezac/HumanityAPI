@@ -2,9 +2,7 @@ package com.humanity.commerce_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.humanity.commerce_api.DTOs.ImageDTO;
-import com.humanity.commerce_api.DTOs.ImagesByIdDTO;
 import com.humanity.commerce_api.DTOs.ProductDTO;
-import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
 import com.humanity.commerce_api.entity.Image;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.repository.ProductRepository;
@@ -28,12 +26,6 @@ public class ProductService {
 
     @Autowired
     ImageService imageService;
-
-    @Autowired
-    StorageService storageService;
-
-    @Autowired
-    ModelMapper modelMapper;
 
     @Autowired
     ObjectMapper objMap;
