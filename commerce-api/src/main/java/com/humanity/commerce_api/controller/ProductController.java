@@ -1,7 +1,6 @@
 package com.humanity.commerce_api.controller;
 
 import com.humanity.commerce_api.DTOs.ProductDTO;
-import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/products")
@@ -31,7 +29,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductWithEveryImageDTO> getProductById (@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> getProductById (@PathVariable Long id) {
         return new ResponseEntity<>(service.getProductById(id), HttpStatus.OK);
     }
 
@@ -41,12 +39,8 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ProductWithEveryImageDTO> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Product> deleteProduct(@PathVariable Long id) {
         return new ResponseEntity<>(service.deleteProduct(id), HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Product> deleteInfoFromProduct(@PathVariable Long id) throws Exception {
-        return new ResponseEntity<>(service.deleteOnlyInfo(id), HttpStatus.OK);
-    }
 }

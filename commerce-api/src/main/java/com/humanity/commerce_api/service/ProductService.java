@@ -1,20 +1,21 @@
 package com.humanity.commerce_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.humanity.commerce_api.DTOs.ImagesByIdDTO;
+import com.humanity.commerce_api.DTOs.ImageDTO;
 import com.humanity.commerce_api.DTOs.ProductDTO;
-import com.humanity.commerce_api.DTOs.ProductWithEveryImageDTO;
+import com.humanity.commerce_api.entity.Image;
 import com.humanity.commerce_api.entity.Product;
 import com.humanity.commerce_api.repository.ProductRepository;
-import org.modelmapper.ModelMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -23,111 +24,117 @@ public class ProductService {
     ProductRepository productRepo;
 
     @Autowired
-    StorageService storageService;
-
-    @Autowired
-    ModelMapper modelMapper;
+    ImageService imageService;
 
     @Autowired
     ObjectMapper objMap;
 
-    public Product postProduct (String product, MultipartFile[] images) throws Exception {
-        Product newProduct = new Product();
+    public Product postProduct (String product, MultipartFile[] images) throws IOException {
         try {
-            newProduct = objMap.readValue(product, Product.class);
+            Product newProduct = objMap.readValue(product, Product.class);
             Product savedProduct = productRepo.save(newProduct);
-            storageService.uploadFile(images, savedProduct.getProduct_id());
+            imageService.saveImage(images, savedProduct);
+
             return savedProduct;
         } catch(Exception e) {
-            throw new RuntimeException("Não foi possível cadastrar produto: " + product);
+            throw new IOException("Não foi possível cadastrar produto: " + product + "\nErro: " + e);
         }
     }
-
+    @Transactional
     public List<ProductDTO> getAllProducts () {
-        List<Product> prodList = productRepo.findAll();;
+        try {
+            List<Product> prodList = productRepo.findAll();
 
-        List<ProductDTO> prodDtoList = new ArrayList<>();
+            List<ProductDTO> prodDtoList = new ArrayList<>();
 
-        if(prodList.isEmpty()) {
-            throw new NoSuchElementException("Não há produtos registrados");
-        } else {
             for (Product product : prodList) {
-                List<String> imagesUrls = new ArrayList<>();
+                ProductDTO productDTO = ProductToDto(product);
 
-                ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+                List<ImageDTO> imagesDto = new ArrayList<>();
 
-                String imageUrl = storageService.downloadFirstFile(product.getProduct_id());
-                imagesUrls.add(imageUrl);
+                if(!product.getImages().isEmpty()){
+                    imagesDto.add(ImageToDto(product.getImages().getFirst()));
 
-                productDTO.setImageURL(imagesUrls);
+                    productDTO.setImages(imagesDto);
+                }
                 prodDtoList.add(productDTO);
             }
+
+            return prodDtoList;
+        } catch (Exception e){
+            throw new RuntimeException("Ocorreu um erro ao tentar acessar a lista dos produtos: \n" + e);
         }
-        return prodDtoList;
     }
 
-    public ProductWithEveryImageDTO getProductById (Long id) {
-        Product productEntity = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
-
-        ProductWithEveryImageDTO productDTO = modelMapper.map(productEntity, ProductWithEveryImageDTO.class);
-
-        List<ImagesByIdDTO> imagesUrls = new ArrayList<>();
+    @Transactional
+    public ProductDTO getProductById (Long id) {
         try {
-            imagesUrls = storageService.downloadFiles(productEntity.getProduct_id());
-        } catch (Exception e) {
-            throw new RuntimeException("Não foi possível captar imagens desse produto!");
-        }
-        productDTO.setImageURL(imagesUrls);
+            Product productEntity = productRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
 
-        return productDTO;
+            ProductDTO productDTO = ProductToDto(productEntity);
+
+            List<ImageDTO> images = productEntity.getImages().stream().map(this::ImageToDto).collect(Collectors.toList());
+
+            productDTO.setImages(images);
+            return productDTO;
+        } catch (Exception e) {
+            throw new RuntimeException("Não foi possível captar imagens desse produto!\nErro: " + e);
+        }
     }
 
     public Product putProduct (Product product) {
         try {
             Long id = product.getProduct_id();
 
-            Product productToUpdate = productRepo.findById(id)
-                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
+            productRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
 
             return productRepo.save(product);
         } catch(Exception e) {
-            throw new RuntimeException("Não foi possível editar produto: " + product);
+            throw new RuntimeException("Não foi possível editar produto de id: " + product.getProduct_id() + "\nErro: " + e);
         }
     }
 
-    public ProductWithEveryImageDTO deleteProduct (Long id) {
-        Product productToDelete = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
-
-        ProductWithEveryImageDTO productDTO = modelMapper.map(productToDelete, ProductWithEveryImageDTO.class);
-
-        List<ImagesByIdDTO> imagesUrls = new ArrayList<>();
-
+    @Transactional
+    public Product deleteProduct (Long id) {
         try {
-            imagesUrls = storageService.downloadFiles(productToDelete.getProduct_id());
-        } catch (Exception e) {
-            throw new RuntimeException("Não foi possível captar imagens desse produto!");
+            Product productToDelete = productRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id));
+
+            productRepo.delete(productToDelete);
+
+            return productToDelete;
+        } catch (Exception e){
+            throw new NoSuchElementException("Não foi possível deletar produto com id: " + id + "\nErro: " + e);
         }
+    }
 
-        productDTO.setImageURL(imagesUrls);
+    public ProductDTO ProductToDto (Product product) {
+        ProductDTO productDTO = new ProductDTO();
 
-        productRepo.delete(productToDelete);
-        storageService.deletePath(id);
+        productDTO.setProduct_id(product.getProduct_id());
+        productDTO.setName(product.getName());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setSize(product.getSize());
+        productDTO.setGender(product.getGender());
+        productDTO.setUnit_price(product.getUnit_price());
+        productDTO.setCategory(product.getCategory());
 
         return productDTO;
     }
 
-    public Product deleteOnlyInfo(Long id) throws Exception {
-        Product productToDelete = productRepo.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Não há produtos registrados com o id: " + id.toString()));
-        try {
-            productRepo.delete(productToDelete);
-            return productToDelete;
-        } catch(Exception e) {
-            throw new Exception("Não foi possível deletar informações do produto com id: " + id);
-        }
-    }
+    @Transactional
+    public ImageDTO ImageToDto (Image image) {
+        ImageDTO imageDto = new ImageDTO();
 
+        imageDto.setImage_id(image.getImage_id());
+        imageDto.setBytes(image.getBytes());
+        imageDto.setType(image.getType());
+        imageDto.setFileName(image.getFileName());
+
+//        return modelMapper.map(image, ImageDTO.class);
+        return imageDto;
+    }
 
 }
